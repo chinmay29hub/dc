@@ -1,0 +1,46 @@
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        int ns, ncs, timestamp, site;
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter number of sites: ");
+        ns = sc.nextInt();
+        System.out.print("Enter number of sites which want to enter critical section: ");
+        ncs = sc.nextInt();
+        ArrayList<Integer> ts = new ArrayList<Integer>(Collections.nCopies(ns, 0));
+        ArrayList<Integer> request = new ArrayList<Integer>();
+        Map<Integer, Integer> mp = new HashMap<Integer, Integer>();
+        for (int i = 0; i < ncs; i++) {
+            System.out.print("\nEnter timestamp: ");
+            timestamp = sc.nextInt();
+            System.out.print("Enter site number: ");
+            site = sc.nextInt();
+            ts.set(site-1, timestamp);
+            request.add(site);
+            mp.put(timestamp, site);
+        }
+
+        System.out.println("\nSites and Timestamp:");
+        for (int i = 0; i < ts.size(); i++) {
+            System.out.println(i+1 + " " + ts.get(i));
+        }
+
+        for (int i = 0; i < request.size(); i++) {
+            System.out.println("\nRequest from site: " + request.get(i));
+            for (int j = 0; j < ts.size(); j++) {
+                if (request.get(i) != (j+1)) {
+                    if (ts.get(j) > ts.get(request.get(i)-1) || ts.get(j) == 0)
+                        System.out.println((j+1) + " Replied");
+                    else
+                        System.out.println((j+1) + " Deferred");
+                }
+            }
+        }
+
+        System.out.println();
+        for (Map.Entry<Integer, Integer> entry : mp.entrySet()) {
+            System.out.println("Site " + entry.getValue() + " entered Critical Section");
+        }
+    }
+}
