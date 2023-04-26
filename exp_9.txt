@@ -1,0 +1,67 @@
+EXP NO.9 -Implement distributed shared memory.
+
+import java.rmi.*;
+import java.rmi.registry.*;
+import java.util.concurrent.*;
+import java.util.*;
+
+public interface SharedMemory extends Remote {
+    public void setValue(int value) throws RemoteException;
+    public int getValue() throws RemoteException, TimeoutException;
+}
+
+public class SharedMemoryServer implements SharedMemory {
+    private int value;
+    private Semaphore semaphore;
+
+    public SharedMemoryServer() {
+        value = 0;
+        semaphore = new Semaphore(1); // Initialize with a single permit
+    }
+
+    public void setValue(int value) throws RemoteException {
+        try {
+            semaphore.acquire(); // Acquire the permit
+            this.value = value;
+            System.out.println("Value set to " + value);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            semaphore.release(); // Release the permit
+        }
+    }
+
+    public int getValue() throws RemoteException, TimeoutException {
+        try {
+            if (semaphore.tryAcquire(1, 5, TimeUnit.SECONDS)) { // Acquire the permit with a timeout of 5 seconds
+                return value;
+            } else {
+                throw new TimeoutException("Timeout while waiting for semaphore permit");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return -1;
+        } finally {
+            semaphore.release(); // Release the permit
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            SharedMemory server = new SharedMemoryServer();
+            LocateRegistry.createRegistry(1099);
+            Naming.rebind("SharedMemory", server);
+            System.out.println("SharedMemoryServer started");
+        } catch (Exception e) {
+            System.err.println("SharedMemoryServer exception:");
+            e.printStackTrace();
+        }
+    }
+}
+
+OUTPUT-
+
+SharedMemoryServer started
+Initial value: 0
+Value set to 42
+New value: 42

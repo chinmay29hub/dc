@@ -1,0 +1,132 @@
+﻿Experiment no 2: RMI code for sum of two numbers 
+Code:
+
+/* SampleServer.java */
+import java.rmi.*;
+
+
+public interface SampleServer extends Remote
+{
+  public int sum(int a,int b) throws RemoteException;
+}
+
+
+
+
+/* SampleServerImpl.java */
+import java.rmi.*;
+import java.rmi.server.*;
+import java.rmi.registry.*;
+
+
+public class SampleServerImpl extends UnicastRemoteObject implements SampleServer
+{
+  SampleServerImpl() throws RemoteException
+  {
+     super();
+  }
+
+
+        public int sum(int a,int b) throws RemoteException
+        {
+                return (a+b);
+        }
+
+
+
+
+        /* SampleServerImpl.java */
+  public static void main(String args[])
+  {
+      try
+      {
+        System.setSecurityManager(new RMISecurityManager());
+        //set the security manager
+
+
+        //create a local instance of the object
+        SampleServerImpl Server = new SampleServerImpl();
+
+
+        //put the local instance in the registry
+        Naming.rebind("SAMPLE-SERVER" , Server);
+
+
+        System.out.println("Server waiting.....");
+      }
+      catch (java.net.MalformedURLException me)       {
+        System.out.println("Malformed URL: " + me.toString());   }
+      catch (RemoteException re)  {
+         System.out.println("Remote exception: " + re.toString());  }
+  }
+
+
+}
+
+
+
+
+import java.rmi.*;
+import java.rmi.server.*;
+public class SampleClient  
+{
+   public static void main(String[]  args)
+   {
+      // set the security manager for the client
+      System.setSecurityManager(new RMISecurityManager());
+      //get the remote object from the registry
+      try
+        {
+          System.out.println("Security Manager loaded");
+          String url = "//localhost/SAMPLE-SERVER";
+          SampleServer remoteObject = (SampleServer)Naming.lookup(url);
+          System.out.println("Got remote object");
+          System.out.println(" 1 + 2 = " + remoteObject.sum(1,2) );
+        }
+        catch (RemoteException exc) {
+          System.out.println("Error in lookup: " + exc.toString()); }
+        catch (java.net.MalformedURLException exc) {
+          System.out.println("Malformed URL: " + exc.toString());   }
+        catch (java.rmi.NotBoundException exc)  {
+          System.out.println("NotBound: " + exc.toString());
+        }
+   }
+}
+
+
+//create a file with name policy.all
+grant {
+        permission java.security.AllPermission;
+  };
+
+
+
+
+//compile SampleServer.java
+//compile SampleServerImpl.java
+//compile SampleClient.java
+
+
+//start rmi registry
+start rmiregistry
+
+
+//create stubs and drivers using the following
+rmic SampleServerImpl
+
+
+//run the server
+java –Djava.security.policy=policy.all SampleServerImpl
+
+
+//run the client
+java –Djava.security.policy=policy.all SampleClient
+
+
+//if it gives an error retype"-" for -D
+
+Output:
+Server waiting.....
+Security Manager loaded
+Got remote object
+1 + 2 = 3
